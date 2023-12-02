@@ -1,29 +1,35 @@
 trigger AddPrimaryContactNumber on Contact (before insert, before update) {
-    //vscode
-    List<Contact> cttList = new List<Contact>();
+
+    List<Contact> cttList = new List<Contact>(); //list of contacts to be updated
+    Set<Id> accountIds = new Set<Id>(); //will get contacts' accountId
+    Contact triggerStarterContact = [SELECT Id, Primary_Contact_Phone__c FROM Contact WHERE Id IN : Trigger.new];
+    cttList.add(triggerStarterContact); //
+    String primaryContactPhone = triggerStarterContact.Primary_Contact_Phone__c; //Primary Contact Phone field value
+
+    //Get Account Id
+    for(Contact c : Trigger.new) {
+        if(c.AccountId != null) {
+            accountIds.add(c.AccountId);
+        }
+    }
 
     //Get related contacts
-    List<Contact> accountContacts = new List<Contact>(
-        [SELECT AccountId, Primary_Contact_Phone__c FROM Contact WHERE Id IN : Trigger.new]
-    );
-
-    // Map<Id,Contact> accountContacts = new Map<Id, Contact>(
-    //     [SELECT AccountId, Primary_Contact_Phone__c FROM Contact WHERE Id IN : Trigger.new]
-    // );
-
-    System.debug(accountContacts);
+    List<Contact>accountContacts = [SELECT Id, AccountId FROM Contact WHERE AccountId IN : accountIds];
 
     //Add Primary Contact Phone number to every related account
     for(Contact cc : accountContacts) {
-        cttList.add(new Contact(
+        if(cc.Id != triggerStarterContact.Id) {
+            cttList.add(new Contact(
             Id = cc.Id,
             AccountId = cc.AccountId,
-            Primary_Contact_Phone__c = cc.Primary_Contact_Phone__c
-        ));
+            Primary_Contact_Phone__c = primaryContactPhone
+            ));
+        }
     }
 
-    //Update contacts (OBS.: Validation for primary contact number already set is done on platform using validation rules)
+    //Update contacts (OBS.: Validation for primary contact number already set via platform using validation rules)
     if(cttList.size() > 0) {
-        Database.upsert(cttList, false);
+        List<Database.UpsertResult> result = Database.upsert(cttList, false);
+        System.debug(result);
     }
 }
