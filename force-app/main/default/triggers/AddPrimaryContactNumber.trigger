@@ -1,5 +1,5 @@
 trigger AddPrimaryContactNumber on Contact (before insert, before update) {
-
+    //vscode
     List<Contact> cttList = new List<Contact>();
 
     //Get related contacts
