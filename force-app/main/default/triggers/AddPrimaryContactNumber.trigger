@@ -1,35 +1,51 @@
-trigger AddPrimaryContactNumber on Contact (before insert, before update) {
-
-    List<Contact> cttList = new List<Contact>(); //list of contacts to be updated
-    Set<Id> accountIds = new Set<Id>(); //will get contacts' accountId
-    Contact triggerStarterContact = [SELECT Id, Primary_Contact_Phone__c FROM Contact WHERE Id IN : Trigger.new];
-    cttList.add(triggerStarterContact); //
-    String primaryContactPhone = triggerStarterContact.Primary_Contact_Phone__c; //Primary Contact Phone field value
-
-    //Get Account Id
-    for(Contact c : Trigger.new) {
+trigger AddPrimaryContactNumber on Contact (before insert, after update) {
+    
+    //will get contacts' accountId
+    Set<Id> accountIds = new Set<Id>();
+    for(Contact c : trigger.new) {
         if(c.AccountId != null) {
             accountIds.add(c.AccountId);
         }
     }
 
-    //Get related contacts
-    List<Contact>accountContacts = [SELECT Id, AccountId FROM Contact WHERE AccountId IN : accountIds];
+    Map<Id,Account> mappedAccounts = new Map<Id,Account>([SELECT Id, (SELECT id, Primary_Contact_Phone__c, Is_Primary_Contact__c from Contacts) FROM Account WHERE Id IN : accountIds]);
 
-    //Add Primary Contact Phone number to every related account
-    for(Contact cc : accountContacts) {
-        if(cc.Id != triggerStarterContact.Id) {
-            cttList.add(new Contact(
-            Id = cc.Id,
-            AccountId = cc.AccountId,
-            Primary_Contact_Phone__c = primaryContactPhone
-            ));
+    if(Trigger.isBefore && Trigger.isInsert) {
+        for(Contact c : Trigger.new) {
+            if(c.AccountId != null && mappedAccounts.containsKey(c.AccountId)) {
+                for(Contact innerC : mappedAccounts.get(c.AccountId).Contacts) {
+                    if(innerC.Is_Primary_Contact__c == true) {
+                        c.addError('A primary contact number is already set.');
+                    }
+                }
+            }
         }
     }
 
-    //Update contacts (OBS.: Validation for primary contact number already set via platform using validation rules)
-    if(cttList.size() > 0) {
-        List<Database.UpsertResult> result = Database.upsert(cttList, false);
-        System.debug(result);
+    // add Primary Contact Phone to related contacts
+    if(Trigger.isAfter && Trigger.isUpdate) {
+        List<Contact> cttList = new List<Contact>(); //list of contacts to be updated
+        for(contact c : Trigger.new) {
+            if(c.Is_Primary_Contact__c == true && c.Is_Primary_Contact__c != Trigger.oldMap.get(c.Id).Is_Primary_Contact__c && mappedAccounts.containsKey(c.AccountId)) {
+                for(Contact innerC : mappedAccounts.get(c.AccountId).Contacts) {
+                    innerC.Primary_Contact_Phone__c = c.Primary_Contact_Phone__c;
+                    cttList.add(innerC);
+                }
+            }
+        }
+
+        System.debug('cttList content: '+cttList);
+        
+        // upsert list via database method
+        if(cttList.size() > 0) {
+            List<Database.SaveResult> updating = Database.update(cttList, false);
+            System.debug(updating);
+        }
+
+        // TO DO: call another class to upsert list asynchronously
+        // WHERE AM I WITH IT? I'm calling a @future method of the class UpdatePrimaryContact. Being a static method (because it is a @future method) it doesn't accept a List<Contact> as a parameter, so I'll have to find a way to workaround that.
+        
+        // UpdatePrimaryContact doUpdateExternally = new UpdatePrimaryContact();
+        // doUpdateExternally.addPrimaryContact(cttList); // NOT WORKING YET
     }
 }
