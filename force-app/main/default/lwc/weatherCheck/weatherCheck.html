@@ -1,0 +1,17 @@
+<template>
+    <lightning-card title="Weather">
+        <!-- TO DO: fetch the actual data from the controller at the apex class WeatherCheckController so the values will show up on screen -->
+        <h2>Weather in {cityName}</h2>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Description {weatherDesc}</td>
+                    <td>Temperature {temperature}</td>
+                </tr>
+                <tr>
+                    <td> <img src = {weatherIcon}></td>
+                </tr>
+            </tbody>
+        </table>
+</lightning-card>
+</template>
