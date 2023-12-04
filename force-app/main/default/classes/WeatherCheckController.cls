@@ -19,7 +19,7 @@ public with sharing class WeatherCheckController {
         Http http = new Http();
         HttpRequest request = new HttpRequest();
         String unit = 'metric';
-        String endpoint = 'https://api.openweathermap.org/data/3.0/weather?';
+        String endpoint = 'https://api.openweathermap.org/data/2.5/weather?';
         endpoint += 'q=' + city + '&appid=' + apiKey + '&units=' + unit;
         request.setEndpoint(endpoint);
         request.setMethod('GET');
