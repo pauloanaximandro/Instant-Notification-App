@@ -14,7 +14,7 @@ public with sharing class WeatherCheckController {
         String recordId = ApexPages.currentPage().getParameters().get('id');
         Account acc = ([SELECT ShippingCity FROM Account WHERE Id = : recordId ]);
         String city = acc.ShippingCity;
-        String apiKey = 'bae136e84869f4286f2110f76cf507c4';
+        String apiKey = 'insert_API_key'; //not inserted because this project is public on GitHub
 
         Http http = new Http();
         HttpRequest request = new HttpRequest();
