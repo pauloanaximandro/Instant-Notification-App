@@ -38,7 +38,7 @@ public with sharing class WeatherCheckController {
         if(configRec == null) {
             configRec = new Weather_Widget_Configuration__c();
         }
-
+// Be careful. All of the code imeadiatelly bellow is prone to Null Pointers. In an actual coding, always take all the measures to make sure you are np safe.
         String cityName = String.valueOf(responseMap.get('name'));
         Map<String, Object> sysMap = (Map<String, Object>)responseMap.get('sys');
         String countryName = String.valueOf(sysMap.get('country'));
