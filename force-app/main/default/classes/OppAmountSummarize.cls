@@ -13,6 +13,7 @@ public with sharing class OppAmountSummarize implements Database.Batchable<sObje
             Double openAmount = 0;
             Double closedLostAmount = 0;
             for(Opportunity oppo : a.opportunities) {
+// If you had much more stage names to test you would need to think of a new strategy to do this logic
                 if(oppo.StageName == 'Closed Won') {
                     closedWonAmount += oppo.Amount;
                 } else if(oppo.StageName == 'Open') {
@@ -40,6 +41,7 @@ public with sharing class OppAmountSummarize implements Database.Batchable<sObje
     }
 
     public void finish(Database.BatchableContext bc) {
+// This query won't do a thing. So you can remove it.
         AsyncApexJob job = [SELECT Id, Status, NumberOfErrors,
         JobItemsProcessed,
         TotalJobItems, CreatedBy.Email
