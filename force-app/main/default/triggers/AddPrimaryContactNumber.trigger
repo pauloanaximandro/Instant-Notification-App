@@ -26,6 +26,7 @@ trigger AddPrimaryContactNumber on Contact (before insert, after update) {
     if(Trigger.isAfter && Trigger.isUpdate) {
         List<Contact> cttList = new List<Contact>(); //list of contacts to be updated
         for(contact c : Trigger.new) {
+// you can create some additional methods just to improve legibility of this clause. Being extense, it becomes easier to commit mistakes
             if(c.Is_Primary_Contact__c == true && c.Is_Primary_Contact__c != Trigger.oldMap.get(c.Id).Is_Primary_Contact__c && mappedAccounts.containsKey(c.AccountId)) {
                 for(Contact innerC : mappedAccounts.get(c.AccountId).Contacts) {
                     innerC.Primary_Contact_Phone__c = c.Primary_Contact_Phone__c;
